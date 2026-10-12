@@ -356,6 +356,178 @@ BEGIN SELECT RAISE(ABORT,'rollback audit immutable'); END;
 """
 
 
+# v13: generic LLM-planned workflows; separate from legacy one-step task records.
+_AGENT_WORKFLOW_SCHEMA = """
+CREATE TABLE IF NOT EXISTS agent_workflows (
+ run_id TEXT PRIMARY KEY, plan_json TEXT NOT NULL, plan_hash TEXT NOT NULL,
+ catalog_hash TEXT NOT NULL, status TEXT NOT NULL, state_version INTEGER NOT NULL,
+ event_seq INTEGER NOT NULL, last_event_hash TEXT NOT NULL,
+ failure_code TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS agent_subtasks (
+ run_id TEXT NOT NULL, subtask_id TEXT NOT NULL, ordinal INTEGER NOT NULL,
+ tool_id TEXT NOT NULL, arguments_json TEXT NOT NULL, depends_on_json TEXT NOT NULL,
+ success_condition TEXT NOT NULL, status TEXT NOT NULL,
+ invocation_id TEXT, result_json TEXT, failure_code TEXT,
+ PRIMARY KEY(run_id,subtask_id), UNIQUE(run_id,ordinal),
+ FOREIGN KEY(run_id) REFERENCES agent_workflows(run_id));
+CREATE TABLE IF NOT EXISTS agent_workflow_events (
+ run_id TEXT NOT NULL, seq INTEGER NOT NULL, kind TEXT NOT NULL,
+ payload_json TEXT NOT NULL, previous_hash TEXT NOT NULL,
+ event_hash TEXT NOT NULL, created_at TEXT NOT NULL,
+ PRIMARY KEY(run_id,seq), FOREIGN KEY(run_id) REFERENCES agent_workflows(run_id));
+CREATE TRIGGER IF NOT EXISTS immutable_agent_workflow_event_update
+BEFORE UPDATE ON agent_workflow_events
+BEGIN SELECT RAISE(ABORT,'agent workflow event immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_agent_workflow_event_delete
+BEFORE DELETE ON agent_workflow_events
+BEGIN SELECT RAISE(ABORT,'agent workflow event immutable'); END;
+"""
+
+
+# v14: durable effectful tool intents and cross-workflow resource protection.
+_AGENT_EFFECT_SCHEMA = """
+CREATE TABLE IF NOT EXISTS agent_effectful_invocations (
+ invocation_id TEXT PRIMARY KEY, run_id TEXT NOT NULL, subtask_id TEXT NOT NULL,
+ tool_id TEXT NOT NULL, resource TEXT NOT NULL, arguments_hash TEXT NOT NULL,
+ fencing_token INTEGER NOT NULL, status TEXT NOT NULL,
+ created_at TEXT NOT NULL,
+ FOREIGN KEY(run_id,subtask_id) REFERENCES agent_subtasks(run_id,subtask_id));
+CREATE INDEX IF NOT EXISTS idx_agent_effect_resource
+ ON agent_effectful_invocations(resource,status);
+"""
+
+
+# v15: separate immutable source-linked observations about SINGLE-AGENT WORKFLOWS.
+# Do not reuse legacy single-step/fake experience evaluation as physical truth.
+_AGENT_EVOLUTION_SCHEMA = """
+CREATE TABLE IF NOT EXISTS agent_evolution_experiences (
+ run_id TEXT PRIMARY KEY, source_head_hash TEXT NOT NULL,
+ content_json TEXT NOT NULL, content_hash TEXT NOT NULL, created_at TEXT NOT NULL,
+ FOREIGN KEY(run_id) REFERENCES agent_workflows(run_id));
+CREATE TABLE IF NOT EXISTS agent_evolution_diagnoses (
+ run_id TEXT PRIMARY KEY, source_experience_hash TEXT NOT NULL,
+ kind TEXT NOT NULL, content_json TEXT NOT NULL, content_hash TEXT NOT NULL,
+ created_at TEXT NOT NULL,
+ FOREIGN KEY(run_id) REFERENCES agent_evolution_experiences(run_id));
+CREATE TABLE IF NOT EXISTS agent_evolution_proposals (
+ proposal_id TEXT PRIMARY KEY, run_id TEXT UNIQUE NOT NULL,
+ source_diagnosis_hash TEXT NOT NULL, target TEXT NOT NULL,
+ content_json TEXT NOT NULL, content_hash TEXT NOT NULL, created_at TEXT NOT NULL,
+ FOREIGN KEY(run_id) REFERENCES agent_evolution_diagnoses(run_id));
+CREATE TABLE IF NOT EXISTS agent_evolution_decisions (
+ run_id TEXT PRIMARY KEY, source_diagnosis_hash TEXT NOT NULL,
+ decision TEXT NOT NULL, created_at TEXT NOT NULL,
+ FOREIGN KEY(run_id) REFERENCES agent_evolution_diagnoses(run_id));
+CREATE TRIGGER IF NOT EXISTS immutable_agent_evolution_experience_update
+BEFORE UPDATE ON agent_evolution_experiences
+BEGIN SELECT RAISE(ABORT,'agent evolution experience immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_agent_evolution_experience_delete
+BEFORE DELETE ON agent_evolution_experiences
+BEGIN SELECT RAISE(ABORT,'agent evolution experience immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_agent_evolution_diagnosis_update
+BEFORE UPDATE ON agent_evolution_diagnoses
+BEGIN SELECT RAISE(ABORT,'agent evolution diagnosis immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_agent_evolution_diagnosis_delete
+BEFORE DELETE ON agent_evolution_diagnoses
+BEGIN SELECT RAISE(ABORT,'agent evolution diagnosis immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_agent_evolution_proposal_update
+BEFORE UPDATE ON agent_evolution_proposals
+BEGIN SELECT RAISE(ABORT,'agent evolution proposal immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_agent_evolution_proposal_delete
+BEFORE DELETE ON agent_evolution_proposals
+BEGIN SELECT RAISE(ABORT,'agent evolution proposal immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_agent_evolution_decision_update
+BEFORE UPDATE ON agent_evolution_decisions
+BEGIN SELECT RAISE(ABORT,'agent evolution decision immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_agent_evolution_decision_delete
+BEFORE DELETE ON agent_evolution_decisions
+BEGIN SELECT RAISE(ABORT,'agent evolution decision immutable'); END;
+"""
+
+
+
+# v16: independent, opt-in OFFLINE RESEARCH policy study and immutable governance.
+# This is separate from the legacy R0-FAKE release and the live Agent runtime.
+_AGENT_POLICY_STUDY_SCHEMA = """
+CREATE TABLE IF NOT EXISTS agent_heldout_suites (
+ suite_id TEXT PRIMARY KEY, definition_json TEXT NOT NULL,
+ definition_hash TEXT NOT NULL, created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS agent_policy_studies (
+ study_id TEXT PRIMARY KEY, proposal_id TEXT UNIQUE NOT NULL,
+ suite_id TEXT NOT NULL, baseline_hash TEXT NOT NULL,
+ candidate_hash TEXT NOT NULL, report_json TEXT NOT NULL,
+ report_hash TEXT NOT NULL, created_at TEXT NOT NULL,
+ FOREIGN KEY(proposal_id) REFERENCES agent_evolution_proposals(proposal_id),
+ FOREIGN KEY(suite_id) REFERENCES agent_heldout_suites(suite_id));
+CREATE TABLE IF NOT EXISTS agent_policy_reviews (
+ decision_id TEXT PRIMARY KEY, study_id TEXT UNIQUE NOT NULL,
+ reviewer_id TEXT NOT NULL, choice TEXT NOT NULL,
+ decision_json TEXT NOT NULL, decision_hash TEXT NOT NULL, decided_at TEXT NOT NULL,
+ FOREIGN KEY(study_id) REFERENCES agent_policy_studies(study_id));
+CREATE TABLE IF NOT EXISTS agent_policy_release_events (
+ event_id TEXT PRIMARY KEY, target TEXT NOT NULL,
+ revision INTEGER NOT NULL, operation TEXT NOT NULL,
+ policy_hash TEXT, study_id TEXT, previous_hash TEXT NOT NULL,
+ body_json TEXT NOT NULL, body_hash TEXT NOT NULL, created_at TEXT NOT NULL,
+ UNIQUE(target, revision),
+ FOREIGN KEY(study_id) REFERENCES agent_policy_studies(study_id));
+CREATE TRIGGER IF NOT EXISTS immutable_agent_suite_update BEFORE UPDATE ON agent_heldout_suites
+BEGIN SELECT RAISE(ABORT,'heldout suite immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_agent_suite_delete BEFORE DELETE ON agent_heldout_suites
+BEGIN SELECT RAISE(ABORT,'heldout suite immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_agent_study_update BEFORE UPDATE ON agent_policy_studies
+BEGIN SELECT RAISE(ABORT,'agent policy study immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_agent_study_delete BEFORE DELETE ON agent_policy_studies
+BEGIN SELECT RAISE(ABORT,'agent policy study immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_agent_policy_review_update BEFORE UPDATE ON agent_policy_reviews
+BEGIN SELECT RAISE(ABORT,'agent policy review immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_agent_policy_review_delete BEFORE DELETE ON agent_policy_reviews
+BEGIN SELECT RAISE(ABORT,'agent policy review immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_agent_policy_release_update BEFORE UPDATE ON agent_policy_release_events
+BEGIN SELECT RAISE(ABORT,'agent policy release immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_agent_policy_release_delete BEFORE DELETE ON agent_policy_release_events
+BEGIN SELECT RAISE(ABORT,'agent policy release immutable'); END;
+"""
+
+# v17: explicit controlled research-runtime policy activations and task-level pins.
+# These records do NOT grant physical actions or switch live release pointers.
+_AGENT_RUNTIME_POLICY_SCHEMA = """
+CREATE TABLE IF NOT EXISTS agent_runtime_policy_activations (
+ activation_id TEXT PRIMARY KEY, manifest_json TEXT NOT NULL,
+ manifest_hash TEXT NOT NULL, created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS agent_runtime_policy_pins (
+ run_id TEXT PRIMARY KEY, activation_id TEXT NOT NULL,
+ manifest_hash TEXT NOT NULL, created_at TEXT NOT NULL,
+ FOREIGN KEY(run_id) REFERENCES agent_workflows(run_id),
+ FOREIGN KEY(activation_id) REFERENCES agent_runtime_policy_activations(activation_id));
+CREATE TRIGGER IF NOT EXISTS immutable_runtime_activation_update
+BEFORE UPDATE ON agent_runtime_policy_activations
+BEGIN SELECT RAISE(ABORT,'runtime activation immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_runtime_activation_delete
+BEFORE DELETE ON agent_runtime_policy_activations
+BEGIN SELECT RAISE(ABORT,'runtime activation immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_runtime_pin_update
+BEFORE UPDATE ON agent_runtime_policy_pins
+BEGIN SELECT RAISE(ABORT,'runtime policy pin immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_runtime_pin_delete
+BEFORE DELETE ON agent_runtime_policy_pins
+BEGIN SELECT RAISE(ABORT,'runtime policy pin immutable'); END;
+"""
+
+# v18: trusted adaptive routing configuration, pinned per workflow.
+_AGENT_ROUTING_SCHEMA = """
+CREATE TABLE IF NOT EXISTS agent_runtime_routing_pins (
+ run_id TEXT PRIMARY KEY, routing_json TEXT NOT NULL,
+ routing_hash TEXT NOT NULL, created_at TEXT NOT NULL,
+ FOREIGN KEY(run_id) REFERENCES agent_workflows(run_id));
+CREATE TRIGGER IF NOT EXISTS immutable_runtime_routing_update
+BEFORE UPDATE ON agent_runtime_routing_pins
+BEGIN SELECT RAISE(ABORT,'runtime routing pin immutable'); END;
+CREATE TRIGGER IF NOT EXISTS immutable_runtime_routing_delete
+BEFORE DELETE ON agent_runtime_routing_pins
+BEGIN SELECT RAISE(ABORT,'runtime routing pin immutable'); END;
+"""
+
 @dataclass(frozen=True)
 class WorkerFence:
     """Monotonic database epoch. Never a substitute for device-side fencing."""
@@ -376,11 +548,15 @@ class SqliteStore:
 
     def _connect(self) -> sqlite3.Connection:
         c = sqlite3.connect(self.path, timeout=10, isolation_level=None)
-        c.row_factory = sqlite3.Row
-        c.execute("PRAGMA foreign_keys=ON")
-        c.execute("PRAGMA busy_timeout=10000")
-        c.execute("PRAGMA journal_mode=WAL")
-        c.execute("PRAGMA synchronous=FULL")
+        try:
+            c.row_factory = sqlite3.Row
+            c.execute("PRAGMA foreign_keys=ON")
+            c.execute("PRAGMA busy_timeout=10000")
+            c.execute("PRAGMA journal_mode=WAL")
+            c.execute("PRAGMA synchronous=FULL")
+        except BaseException:
+            c.close()
+            raise
         return c
 
     @contextmanager
@@ -393,7 +569,8 @@ class SqliteStore:
             yield c
             c.execute("COMMIT")
         except BaseException:
-            c.execute("ROLLBACK")
+            if c.in_transaction:
+                c.execute("ROLLBACK")
             raise
         finally:
             c.close()
@@ -415,6 +592,80 @@ class SqliteStore:
         if statement.strip():
             raise DomainError("INCOMPLETE_SCHEMA_DDL")
 
+    @staticmethod
+    def _validate_critical_tables(c: sqlite3.Connection) -> None:
+        """Fail closed on incompatible pre-existing tables during migration.
+
+        CREATE TABLE IF NOT EXISTS intentionally leaves existing objects alone.
+        It is not a schema compatibility check: a conflicting partial table
+        could otherwise be silently accepted while schema_meta advances.
+        This guard checks critical runtime columns; it is not a full database
+        authenticity or arbitrary-schema-repair mechanism.
+        """
+        required = {
+            "schema_meta": {"version"},
+            "release_manifests": {"release_id", "body", "body_hash"},
+            "worker_lease": {"singleton", "owner_id", "fence_token", "expires_at_ms"},
+            "resource_quarantine": {"resource", "invocation_id", "reason", "created_at"},
+            "agent_workflows": {
+                "run_id", "plan_json", "plan_hash", "catalog_hash", "status",
+                "state_version", "event_seq", "last_event_hash", "failure_code",
+                "created_at", "updated_at",
+            },
+            "agent_subtasks": {
+                "run_id", "subtask_id", "ordinal", "tool_id", "arguments_json",
+                "depends_on_json", "success_condition", "status",
+                "invocation_id", "result_json", "failure_code",
+            },
+            "agent_workflow_events": {
+                "run_id", "seq", "kind", "payload_json", "previous_hash",
+                "event_hash", "created_at",
+            },
+            "agent_effectful_invocations": {
+                "invocation_id", "run_id", "subtask_id", "tool_id", "resource",
+                "arguments_hash", "fencing_token", "status", "created_at",
+            },
+            "agent_runtime_policy_activations": {
+                "activation_id", "manifest_json", "manifest_hash", "created_at",
+            },
+            "agent_runtime_policy_pins": {
+                "run_id", "activation_id", "manifest_hash", "created_at",
+            },
+            "agent_runtime_routing_pins": {
+                "run_id", "routing_json", "routing_hash", "created_at",
+            },
+            "agent_evolution_experiences": {
+                "run_id", "source_head_hash", "content_json", "content_hash", "created_at",
+            },
+            "agent_evolution_diagnoses": {
+                "run_id", "source_experience_hash", "kind", "content_json", "content_hash", "created_at",
+            },
+            "agent_evolution_proposals": {
+                "proposal_id", "run_id", "source_diagnosis_hash", "target", "content_json", "content_hash", "created_at",
+            },
+            "agent_evolution_decisions": {
+                "run_id", "source_diagnosis_hash", "decision", "created_at",
+            },
+            "agent_heldout_suites": {"suite_id", "definition_json", "definition_hash", "created_at"},
+            "agent_policy_studies": {
+                "study_id", "proposal_id", "suite_id", "baseline_hash", "candidate_hash", "report_json", "report_hash", "created_at",
+            },
+            "agent_policy_reviews": {
+                "decision_id", "study_id", "reviewer_id", "choice", "decision_json", "decision_hash", "decided_at",
+            },
+            "agent_policy_release_events": {
+                "event_id", "target", "revision", "operation", "policy_hash", "study_id", "previous_hash", "body_json", "body_hash", "created_at",
+            },
+        }
+        for name, columns in required.items():
+            object_type = c.execute(
+                "SELECT type FROM sqlite_master WHERE name=?", (name,)
+            ).fetchone()
+            # Identifiers come only from the fixed trusted map above.
+            present = {row[1] for row in c.execute(f'PRAGMA table_info("{name}")')}
+            if object_type is None or object_type[0] != "table" or not columns <= present:
+                raise DomainError("INCOMPATIBLE_SCHEMA_LAYOUT")
+
     def _initialize(self) -> None:
         with closing(self._connect()) as c:
             try:
@@ -427,7 +678,7 @@ class SqliteStore:
                 if meta_exists:
                     found = c.execute("SELECT version FROM schema_meta").fetchall()
                     if (len(found) != 1 or not isinstance(found[0][0], int)
-                        or found[0][0] not in range(1, 13)):
+                        or found[0][0] not in range(1, 19)):
                         raise DomainError("UNSUPPORTED_SCHEMA")
                 else:
                     has_tables = c.execute(
@@ -447,13 +698,16 @@ class SqliteStore:
                 for script in (
                     _SCHEMA, _SKILL_SCHEMA, _EXPERIENCE_SCHEMA, _DIAGNOSIS_SCHEMA,
                     _CANDIDATE_SCHEMA, _EVALUATION_SCHEMA, _REVIEW_SCHEMA,
-                    _RELEASE_MANAGEMENT_SCHEMA, _ROLLBACK_SCHEMA,
+                    _RELEASE_MANAGEMENT_SCHEMA, _ROLLBACK_SCHEMA, _AGENT_WORKFLOW_SCHEMA, _AGENT_EFFECT_SCHEMA, _AGENT_EVOLUTION_SCHEMA, _AGENT_POLICY_STUDY_SCHEMA, _AGENT_RUNTIME_POLICY_SCHEMA, _AGENT_ROUTING_SCHEMA,
                 ):
                     self._execute_schema(c, script)
+                # All DDL and compatibility checking occur within the same
+                # transaction; any mismatch rolls back without version bump.
+                self._validate_critical_tables(c)
                 if not found:
-                    c.execute("INSERT INTO schema_meta VALUES (12)")
-                elif found[0][0] < 12:
-                    c.execute("UPDATE schema_meta SET version=12")
+                    c.execute("INSERT INTO schema_meta VALUES (18)")
+                elif found[0][0] < 18:
+                    c.execute("UPDATE schema_meta SET version=18")
                 c.execute("INSERT OR IGNORE INTO worker_lease VALUES (1,NULL,0,0)")
                 body = canonical_bytes(R0_MANIFEST).decode("utf-8")
                 digest = content_hash(R0_MANIFEST)
@@ -583,7 +837,8 @@ class SqliteStore:
                 c.execute("COMMIT")
                 return WorkerFence(owner_id, token, lease_ms)
             except BaseException:
-                c.execute("ROLLBACK")
+                if c.in_transaction:
+                    c.execute("ROLLBACK")
                 raise
 
     def release_worker(self, fence: WorkerFence) -> bool:
@@ -599,7 +854,8 @@ class SqliteStore:
                 c.execute("COMMIT")
                 return count == 1
             except BaseException:
-                c.execute("ROLLBACK")
+                if c.in_transaction:
+                    c.execute("ROLLBACK")
                 raise
 
     def heartbeat_worker(self) -> None:

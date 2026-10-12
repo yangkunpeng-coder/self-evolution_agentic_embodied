@@ -1,0 +1,5 @@
+include README.md
+recursive-include configs *.toml
+recursive-include examples *.py
+recursive-include tests *.py *.sqlite3.gz
+global-exclude *.py[cod] *.bak *.sqlite3-wal *.sqlite3-shm

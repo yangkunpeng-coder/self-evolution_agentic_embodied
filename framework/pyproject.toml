@@ -4,8 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "self-evolving-embodied"
-version = "1.0.0"
-description = "A research framework for self-evolving agentic embodied systems"
+version = "1.1.0rc3"
+description = "Single-LLM-agent embodied framework with governed offline self-evolution"
+readme = "README.md"
 requires-python = ">=3.12,<3.13"
 authors = [
     {name = "Self-Evolving Embodied Framework Project"}
@@ -14,6 +15,16 @@ dependencies = []
 
 [project.scripts]
 self-evolving-embodied = "self_evolving_embodied.cli:main"
+self-evolving-plan = "self_evolving_embodied.planning.cli:main"
+self-evolving-workflow-evolution = "self_evolving_embodied.evolution.workflow_cli:main"
+self-evolving-policy-study = "self_evolving_embodied.evaluation.study_cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+[project.optional-dependencies]
+llm = ["openai>=1.0,<3"]
+dev = ["pytest>=8,<10"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

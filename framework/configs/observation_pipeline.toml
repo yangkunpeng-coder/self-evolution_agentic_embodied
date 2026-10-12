@@ -1,0 +1,27 @@
+# In-memory observation streams; raw sensor data is never persisted to SQLite.
+[observation_pipeline]
+default_retention_seconds = 60.0
+# This budget can cause earlier-than-60-second eviction under high throughput.
+max_buffer_bytes = 536870912  # 512 MiB, approximate accounting
+max_stream_capacity = 1000000
+
+[[streams]]
+source_id = "front_camera"
+modality = "rgb"
+frequency_hz = 30.0
+
+[[streams]]
+source_id = "front_camera"
+modality = "depth"
+frequency_hz = 15.0
+
+[[streams]]
+source_id = "robot_arm"
+modality = "joint_state"
+frequency_hz = 100.0
+
+[[streams]]
+source_id = "base_imu"
+modality = "imu"
+frequency_hz = 200.0
+retention_seconds = 30.0

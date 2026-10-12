@@ -1,0 +1,31 @@
+# Declarative framework composition. Every plugin ID must first be registered
+# in TrustedPluginCatalog by the TRUSTED host application, with exactly this version.
+# This is a template only. It does not import any model or ROS node.
+# No API keys, import paths, execution grants or arbitrary Python code in TOML.
+
+[framework]
+database_path = "runtime_tasks.sqlite3"
+max_turns = 40
+max_replans = 2
+
+[observation_pipeline]
+default_retention_seconds = 60.0
+max_buffer_bytes = 536870912
+max_stream_capacity = 1000000
+
+[[streams]]
+source_id = "front_camera"
+modality = "rgb"
+frequency_hz = 30.0
+retention_seconds = 60.0
+
+[[streams]]
+source_id = "robot_arm"
+modality = "joint_state"
+frequency_hz = 100.0
+
+[plugins]
+brain = {id = "host.llm", version = "1.0.0"}
+execution = []
+assessment = []
+sources = []

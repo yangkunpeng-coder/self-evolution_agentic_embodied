@@ -1,0 +1,44 @@
+# Cross-platform line endings for the source-only research repository.
+# Store all detected text files with LF in Git.
+* text=auto
+
+# Source, project metadata, documentation and configuration: LF on every OS.
+*.py         text eol=lf
+*.pyi        text eol=lf
+*.toml       text eol=lf
+*.yml        text eol=lf
+*.yaml       text eol=lf
+*.json       text eol=lf
+*.md         text eol=lf
+*.txt        text eol=lf
+*.ini        text eol=lf
+*.cfg        text eol=lf
+*.sh         text eol=lf
+*.gitignore  text eol=lf
+*.gitattributes text eol=lf
+
+# Native Windows command scripts: CRLF on checkout.
+*.cmd        text eol=crlf
+*.bat        text eol=crlf
+*.ps1        text eol=crlf
+
+# Binary formats must never undergo newline conversion.
+*.png        binary
+*.jpg        binary
+*.jpeg       binary
+*.gif        binary
+*.webp       binary
+*.ico        binary
+*.pdf        binary
+*.zip        binary
+*.7z         binary
+*.gz         binary
+*.sqlite     binary
+*.sqlite3    binary
+*.db         binary
+*.pkl        binary
+*.npy        binary
+*.npz        binary
+*.pt         binary
+*.pth        binary
+*.onnx       binary

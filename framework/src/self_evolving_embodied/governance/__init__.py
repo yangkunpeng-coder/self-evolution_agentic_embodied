@@ -13,3 +13,11 @@ __all__ = [
     "RollbackManager",
     "StagedRelease",
 ]
+
+# v16 research-only, NOT the legacy executable release manager.
+from .agent_policy_release import ResearchPolicyGovernance, ResearchPolicyPointer, ResearchReview
+__all__ += ["ResearchPolicyGovernance", "ResearchPolicyPointer", "ResearchReview"]
+
+# v17 explicit opt-in controlled research-runtime activation.
+from .runtime_policy import RuntimePolicyActivator, RuntimePolicyBinding
+__all__ += ["RuntimePolicyActivator", "RuntimePolicyBinding"]

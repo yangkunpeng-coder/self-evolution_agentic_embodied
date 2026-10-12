@@ -1,7 +1,7 @@
-# v1.0.0 - source-only research framework release
+# Framework source, documentation, examples and acceptance tests are publishable.
 # Ignore rules do not delete local files.
 
-# Local research materials (keep on disk; do not publish)
+# Local drafts and any future research/download artifacts (do not publish)
 /doc/
 /research/
 /papers/
@@ -40,11 +40,8 @@
 /step9_r1_verify/
 /step10_github_ready_repo/
 
-# Source-only v1.0.0: omit old framework tests and development tools
-/framework/tests/
-/framework/examples/
+# Local development tools (acceptance tests/docs/examples remain versioned)
 /framework/tools/
-/framework/docs/
 /framework/run_*.cmd
 /framework/requirements-*.txt
 
@@ -54,6 +51,7 @@ __pycache__/
 *.pyd
 *.egg-info/
 .pytest_cache/
+/framework/rc3-local-tests/
 .mypy_cache/
 .ruff_cache/
 .hypothesis/

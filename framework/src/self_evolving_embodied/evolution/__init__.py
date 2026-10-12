@@ -2,4 +2,13 @@
 
 from .candidates import CandidateRecord, EvolutionCandidateGenerator, EvolutionTarget
 
-__all__ = ["CandidateRecord", "EvolutionCandidateGenerator", "EvolutionTarget"]
+from .workflow_cycle import (
+    EvolutionPolicyTarget, WorkflowDiagnosisKind, WorkflowDiagnosisRecord,
+    WorkflowEvolutionCycle, WorkflowEvolutionRecord, WorkflowProposalRecord,
+)
+
+__all__ = [
+    "CandidateRecord", "EvolutionCandidateGenerator", "EvolutionTarget",
+    "EvolutionPolicyTarget", "WorkflowDiagnosisKind", "WorkflowDiagnosisRecord",
+    "WorkflowEvolutionCycle", "WorkflowEvolutionRecord", "WorkflowProposalRecord",
+]
