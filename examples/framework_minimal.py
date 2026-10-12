@@ -63,7 +63,7 @@ def report_policy(_arguments, output):
 
 
 def main() -> None:
-    with TemporaryDirectory(prefix='embodied-rc3-') as folder:
+    with TemporaryDirectory(prefix='embodied-framework-') as folder:
         builder = FrameworkBuilder(FrameworkConfig(Path(folder)/'tasks.sqlite3'), provider=StubLLM())
         builder.add_stream(SensorStreamConfig(KEY, frequency_hz=30, capacity=1800))
         builder.add_execution_tool(TOOL, needs=NEEDS, factory=MetadataTool)

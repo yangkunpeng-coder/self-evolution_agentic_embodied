@@ -1,11 +1,11 @@
 """Stable public imports for the single-Agent embodied research framework.
 
 This package is a platform-independent framework; optional models and robots
-are provided by explicitly trusted host adapters. See the framework README
+are provided by explicitly trusted host adapters. See the repository README
 and examples/framework_minimal.py for composition and public API usage.
 """
 
-__version__ = "1.1.0rc3"
+__version__ = "1.2.0"
 
 from .application import (
     FrameworkBuilder, FrameworkConfig, FrameworkInventory,

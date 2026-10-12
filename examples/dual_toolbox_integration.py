@@ -3,7 +3,7 @@
 No ROS 2, LLM, VLA or simulator is needed. Synthetic observations merely
 illustrate interface wiring, not real robot task success or a verified trial.
 
-From framework/: python examples/dual_toolbox_integration.py
+From the repository root: python examples/dual_toolbox_integration.py
 """
 from __future__ import annotations
 

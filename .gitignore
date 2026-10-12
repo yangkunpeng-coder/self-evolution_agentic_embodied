@@ -40,18 +40,14 @@
 /step9_r1_verify/
 /step10_github_ready_repo/
 
-# Local development tools (acceptance tests/docs/examples remain versioned)
-/framework/tools/
-/framework/run_*.cmd
-/framework/requirements-*.txt
-
 # Python caches and build output
 __pycache__/
 *.py[cod]
 *.pyd
 *.egg-info/
 .pytest_cache/
-/framework/rc3-local-tests/
+/rc3-local-tests/
+/.validation-*/
 .mypy_cache/
 .ruff_cache/
 .hypothesis/

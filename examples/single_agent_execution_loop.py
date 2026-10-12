@@ -2,9 +2,9 @@
 
 Uses synthetic observation and deterministic, local Brain purely as an example.
 No physical robot, ROS 2, online LLM, or true semantic success is demonstrated.
-This file is NOT a validation test. Read the dev5 guide before deployment.
+This file is NOT a validation test. See README.md for the framework boundaries.
 
-From framework/: python examples/single_agent_execution_loop.py
+From the repository root: python examples/single_agent_execution_loop.py
 """
 from __future__ import annotations
 

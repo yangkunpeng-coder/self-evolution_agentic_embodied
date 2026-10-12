@@ -1,6 +1,6 @@
 # Self-Evolving Agentic Embodied Framework
 
-**v1.1.0rc3 · Python 3.12 · Single Agent · LLM-Centric · Governed Offline Self-Evolution**
+**v1.2.0 · Python 3.12 · Single Agent · LLM-Centric · Governed Offline Self-Evolution**
 
 自进化智能体具身智能框架，将任务规划、执行工具、结果评估、实时观测与离线自进化组织为可扩展的闭环。模型、机器人和仿真器通过可选 Provider / Adapter / Plugin 接入，核心框架不绑定具体实验平台。
 
@@ -37,7 +37,7 @@
 ```cmd
 conda env create -f environment.yml
 conda activate embodied-research
-python -m pip install -e "framework[dev]"
+python -m pip install -e ".[dev]"
 ```
 
 已有 `embodied-research` 环境时，跳过第一条命令。使用其他 Python 3.12 环境也可以直接执行 editable 安装命令。
@@ -45,7 +45,7 @@ python -m pip install -e "framework[dev]"
 ### 运行最小框架示例
 
 ```cmd
-python framework\examples\framework_minimal.py
+python examples\framework_minimal.py
 ```
 
 该示例使用本地 Stub LLM、合成传感器数据和只读工具，完整演示：
@@ -62,11 +62,11 @@ FrameworkBuilder → start → publish_observation
 
 | 示例 | 内容 | 命令 |
 | --- | --- | --- |
-| [最小框架初始化](framework/examples/framework_minimal.py) | 唯一 Brain、工具注册、评估反馈与生命周期 | `python framework\examples\framework_minimal.py` |
-| [插件注册与配置](framework/examples/plugin_registration.py) | 可信 Catalog、精确版本选择、TOML 装配与任务运行 | `python framework\examples\plugin_registration.py` |
-| [Observation Pipeline](framework/examples/observation_pipeline.py) | Push、latest / window / snapshot / subscribe 与独立 Queue | `python framework\examples\observation_pipeline.py` |
-| [双工具箱集成](framework/examples/dual_toolbox_integration.py) | 执行能力与独立结果评估的接口组合 | `python framework\examples\dual_toolbox_integration.py` |
-| [ROS 2 接入模板](framework/examples/ros2_optional_integration.py) | Topic 入口、宿主 Executor 与动作授权边界 | 配置参考；由 ROS 宿主提供节点与 Executor |
+| [最小框架初始化](examples/framework_minimal.py) | 唯一 Brain、工具注册、评估反馈与生命周期 | `python examples\framework_minimal.py` |
+| [插件注册与配置](examples/plugin_registration.py) | 可信 Catalog、精确版本选择、TOML 装配与任务运行 | `python examples\plugin_registration.py` |
+| [Observation Pipeline](examples/observation_pipeline.py) | Push、latest / window / snapshot / subscribe 与独立 Queue | `python examples\observation_pipeline.py` |
+| [双工具箱集成](examples/dual_toolbox_integration.py) | 执行能力与独立结果评估的接口组合 | `python examples\dual_toolbox_integration.py` |
+| [ROS 2 接入模板](examples/ros2_optional_integration.py) | Topic 入口、宿主 Executor 与动作授权边界 | 配置参考；由 ROS 宿主提供节点与 Executor |
 
 ## 执行与评估闭环
 
@@ -116,14 +116,14 @@ Experience → Failure Diagnosis → Evolution Candidate
 | 观测源 | `factory(sink)` 返回支持 `start()` / `close()` 的数据源 |
 | 有副作用 Adapter | 通过宿主 `ExecutionGrant` 和现有授权桥接入，提供 fencing、独立 observe、invoke 与 stop 接口 |
 
-可信宿主注册插件工厂，TOML 仅选择允许的 ID、种类和精确版本，不加载任意 Python 路径或授予动作权限。配置模板见 [framework_plugins.example.toml](framework/configs/framework_plugins.example.toml) 与 [observation_pipeline.toml](framework/configs/observation_pipeline.toml)。
+可信宿主注册插件工厂，TOML 仅选择允许的 ID、种类和精确版本，不加载任意 Python 路径或授予动作权限。配置模板见 [framework_plugins.example.toml](configs/framework_plugins.example.toml) 与 [observation_pipeline.toml](configs/observation_pipeline.toml)。
 
 框架支持 `with framework:` 管理启动与关闭，观测源和显式托管资源逆序释放。外部 SDK 的长期资源由宿主明确管理；网络超时和设备侧停止机制由相应 Provider / Adapter 实现。Python 调用超时限制等待时间，无法强制终止底层线程或物理动作。
 
 需要可选在线 LLM SDK 时，在仓库根目录安装：
 
 ```cmd
-python -m pip install -e "framework[llm]"
+python -m pip install -e ".[llm]"
 ```
 
 ## 测试与当前版本
@@ -131,51 +131,51 @@ python -m pip install -e "framework[llm]"
 在仓库根目录运行：
 
 ```cmd
-python -m pytest framework\tests -q
+python -m pytest -q
 ```
 
 **2026-10-13 本地验收：Windows / Python 3.12.14，70 项测试全部通过。** 覆盖框架装配、工具箱集成、观测 Queue、决策与恢复、数据库迁移、Worker Lease、事件链、超时、资源释放和离线策略治理。
 
-测试使用 Stub Provider、合成数据与本地 Fake/只读工具。当前版本保持 **v1.1.0rc3**；真实 LLM 服务、ROS 2 节点、机器人、特定仿真器和具体 VLA/VLN/WAM 模型尚未联调，合成验收不证明真实任务效果或自进化性能收益。
+测试使用 Stub Provider、合成数据与本地 Fake/只读工具。当前版本为 **v1.2.0**；真实 LLM 服务、ROS 2 节点、机器人、特定仿真器和具体 VLA/VLN/WAM 模型尚未联调，合成验收不证明真实任务效果或自进化性能收益。
 
-工具注册不代表物理执行授权，LLM 不能自行授予权限；执行结果未知时不盲目重试，ROS Action 的取消请求不等于设备已安全停止。正式版发布及外部 Adapter 接入分别验收。
+工具注册不代表物理执行授权，LLM 不能自行授予权限；执行结果未知时不盲目重试，ROS Action 的取消请求不等于设备已安全停止。框架软件与外部 Adapter 接入分别验收。
 
 ## 仓库结构
+
+v1.2.0 将 Python 工程统一到仓库根目录，安装、测试、配置和示例使用同一入口。
 
 ```text
 self-evolution_agentic_embodied/
 ├── README.md
+├── pyproject.toml
+├── MANIFEST.in
 ├── environment.yml
+├── configs/
+├── examples/
+├── tests/
 ├── image/
 │   └── self_evolving_framework_overview.png
-└── framework/
-    ├── README.md
-    ├── pyproject.toml
-    ├── MANIFEST.in
-    ├── configs/
-    ├── examples/
-    ├── tests/
-    └── src/self_evolving_embodied/
-        ├── application/       # 统一装配与生命周期
-        ├── agent/             # 唯一 Brain 与执行循环
-        ├── planning/          # LLM 规划与计划校验
-        ├── toolboxes/         # 执行 / 评估工具箱
-        ├── tools/             # 工具契约与 Registry
-        ├── observations/      # 实时内存 Queue
-        ├── harness/           # 授权、证据与恢复
-        ├── runtime/           # 持久化工作流
-        ├── storage/           # SQLite
-        ├── memory/            # 记忆
-        ├── experience/        # 经验
-        ├── diagnosis/         # 故障诊断
-        ├── evolution/         # 离线改进候选
-        ├── evaluation/        # 离线评估
-        ├── review/            # 人工审查接口
-        ├── governance/        # 策略版本、发布与回滚
-        ├── plugins/           # 可信插件与配置
-        ├── adapters/          # 可选 Provider / Fake Adapter
-        ├── integrations/      # Environment / ROS 2 接口
-        └── core/              # 共享数据契约与标识
+└── src/self_evolving_embodied/
+    ├── application/       # 统一装配与生命周期
+    ├── agent/             # 唯一 Brain 与执行循环
+    ├── planning/          # LLM 规划与计划校验
+    ├── toolboxes/         # 执行 / 评估工具箱
+    ├── tools/             # 工具契约与 Registry
+    ├── observations/      # 实时内存 Queue
+    ├── harness/           # 授权、证据与恢复
+    ├── runtime/           # 持久化工作流
+    ├── storage/           # SQLite
+    ├── memory/            # 记忆
+    ├── experience/        # 经验
+    ├── diagnosis/         # 故障诊断
+    ├── evolution/         # 离线改进候选
+    ├── evaluation/        # 离线评估
+    ├── review/            # 人工审查接口
+    ├── governance/        # 策略版本、发布与回滚
+    ├── plugins/           # 可信插件与配置
+    ├── adapters/          # 可选 Provider / Fake Adapter
+    ├── integrations/      # Environment / ROS 2 接口
+    └── core/              # 共享数据契约与标识
 ```
 
 `python -m self_evolving_embodied` 保留为历史 Fake-only CLI；通用框架应用入口是 `FrameworkBuilder` / `SingleAgentFramework`。示例与源码接口不依赖具体机器人实验、数据集或 Benchmark。
