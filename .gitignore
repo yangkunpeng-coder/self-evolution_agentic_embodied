@@ -1,0 +1,117 @@
+# v1.0.0 - source-only research framework release
+# Ignore rules do not delete local files.
+
+# Local research materials (keep on disk; do not publish)
+/doc/
+/research/
+/papers/
+/paper_sources/
+/paper_downloads/
+/synthesis/
+/templates/
+/tools/
+/paper*.json
+/ACTIVE_PAPERS.json
+/PROJECT_*.md
+/Agentic_Embodied_Research_Workflow*.md
+/repo_clones/
+/repos/
+/third_party_clones/
+/downloads/
+/datasets/
+/data/
+/models/
+/checkpoints/
+/outputs/
+/results/
+/runs/
+/artifacts/
+/scratch/
+/private/
+/backups/
+/local_data/
+
+# Historical deliverables and verification workspaces
+/step*_deliverable/
+/step*_build/
+/step*_work/
+/step*_verify/
+/step9_final/
+/step9_r1_verify/
+/step10_github_ready_repo/
+
+# Source-only v1.0.0: omit old framework tests and development tools
+/framework/tests/
+/framework/examples/
+/framework/tools/
+/framework/docs/
+/framework/run_*.cmd
+/framework/requirements-*.txt
+
+# Python caches and build output
+__pycache__/
+*.py[cod]
+*.pyd
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage*
+htmlcov/
+build/
+dist/
+.tox/
+.nox/
+
+# Environments / IDE
+.venv/
+venv/
+env/
+.conda/
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Runtime databases and WAL sidecars
+*.sqlite
+*.sqlite3
+*.db
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite3-wal
+*.sqlite3-shm
+*.db-wal
+*.db-shm
+
+# Credentials and local secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.json
+token.json
+
+# Local archives, logs and editor backups
+*.pdf
+*.zip
+*.7z
+*.rar
+*.tar
+*.tar.gz
+*.tgz
+*.log
+logs/
+*.bak
+*.tmp
+*.swp
+*.swo
+*.orig
+*~

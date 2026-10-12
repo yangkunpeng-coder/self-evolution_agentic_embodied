@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "self-evolving-embodied"
+version = "1.0.0"
+description = "A research framework for self-evolving agentic embodied systems"
+requires-python = ">=3.12,<3.13"
+authors = [
+    {name = "Self-Evolving Embodied Framework Project"}
+]
+dependencies = []
+
+[project.scripts]
+self-evolving-embodied = "self_evolving_embodied.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

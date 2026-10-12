@@ -1,0 +1,5 @@
+# Example only; configuration loader and production adapters are future work.
+[demo]
+scenario = "success"
+database_path = "framework_runtime.sqlite3"
+release_id = "R0-FAKE"
